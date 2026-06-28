@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   FlatList,
   StyleSheet,
   useWindowDimensions,
   RefreshControl,
   ActivityIndicator,
+  Text,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ProductCard } from '@/components/ProductCard';
-import { listProducts } from '@/services/api';
+import { CategoryFilter } from '@/components/CategoryFilter';
+import { listProducts, listCategories } from '@/services/api';
 import { useCart } from '@/hooks/useCart';
 
 interface Product {
@@ -21,6 +22,13 @@ interface Product {
   price_cents: number;
   image_url: string;
   stock: number;
+  images: { url: string }[];
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
 }
 
 export default function HomeScreen() {
@@ -29,25 +37,51 @@ export default function HomeScreen() {
   const { add } = useCart();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [addingId, setAddingId] = useState<number | null>(null);
 
   const numColumns = width >= 1024 ? 3 : width >= 768 ? 2 : 1;
 
-  const fetchProducts = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const res = await listProducts();
-      setProducts(res.data || []);
-    } catch (e) {
-      console.error('Failed to fetch products', e);
+      const [prodRes, catRes] = await Promise.all([
+        listProducts() as any,
+        listCategories() as any,
+      ]);
+      setProducts(prodRes.data || []);
+      setCategories(catRes.data || []);
+    } catch {
+      // no-op
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await listProducts() as any;
+      setProducts(res.data || []);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await listProducts() as any;
+        setProducts(res.data || []);
+      } catch {
+        // no-op
+      }
+    })();
+  }, [selectedCategory]);
 
   const handleAddToCart = useCallback(async (id: number) => {
     setAddingId(id);
@@ -59,19 +93,20 @@ export default function HomeScreen() {
   }, [add]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-      </View>
-    );
+    return <View style={styles.center}><ActivityIndicator color={Colors.primary} size="large" /></View>;
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Discover Our Products</Text>
-        <Text style={styles.heroSub}>Premium quality, delivered to your door</Text>
+        <Text style={styles.heroTitle}>Handcrafted Elegance</Text>
+        <Text style={styles.heroSub}>Celebrating Indian heritage</Text>
       </View>
+      <CategoryFilter
+        categories={categories}
+        selected={selectedCategory}
+        onSelect={setSelectedCategory}
+      />
       <FlatList
         data={products}
         key={numColumns}
@@ -81,7 +116,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <ProductCard
-            product={item}
+            product={{ ...item, image_url: item.images?.[0]?.url || item.image_url }}
             onAddToCart={handleAddToCart}
             onPress={(id) => router.push(`/product/${id}`)}
             adding={addingId === item.id}
@@ -94,9 +129,7 @@ export default function HomeScreen() {
             tintColor={Colors.primary}
           />
         }
-        ListEmptyComponent={
-          <Text style={styles.empty}>No products available yet.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>No products available yet.</Text>}
       />
     </View>
   );
@@ -106,14 +139,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   hero: {
-    padding: 24,
-    paddingBottom: 8,
+    padding: 20,
+    paddingBottom: 12,
     backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderColor: Colors.border,
   },
   heroTitle: { color: Colors.text, fontSize: 22, fontWeight: '800' },
-  heroSub: { color: Colors.muted, fontSize: 14, marginTop: 4 },
+  heroSub: { color: Colors.muted, fontSize: 13, marginTop: 2 },
   list: { padding: 16 },
   row: { gap: 16 },
   empty: { color: Colors.muted, textAlign: 'center', marginTop: 48, fontSize: 16 },

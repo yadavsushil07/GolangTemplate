@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -22,11 +23,12 @@ type otpEntry struct {
 }
 
 type AuthService struct {
-	userRepo      *repository.UserRepository
-	jwtSecret     []byte
-	otpExpiry     time.Duration
-	mu            sync.Mutex
-	otpStore      map[string]otpEntry
+	userRepo  *repository.UserRepository
+	jwtSecret []byte
+	otpExpiry time.Duration
+	mu        sync.Mutex
+	otpStore  map[string]otpEntry
+	notif     *NotificationService
 }
 
 func NewAuthService(userRepo *repository.UserRepository, jwtSecret string, otpExpiryMinutes int) *AuthService {
@@ -36,6 +38,11 @@ func NewAuthService(userRepo *repository.UserRepository, jwtSecret string, otpEx
 		otpExpiry: time.Duration(otpExpiryMinutes) * time.Minute,
 		otpStore:  make(map[string]otpEntry),
 	}
+}
+
+// SetNotificationService wires in the notification service after construction.
+func (s *AuthService) SetNotificationService(n *NotificationService) {
+	s.notif = n
 }
 
 func (s *AuthService) RequestOTP(identifier string) (string, error) {
@@ -54,6 +61,12 @@ func (s *AuthService) RequestOTP(identifier string) (string, error) {
 	s.mu.Lock()
 	s.otpStore[identifier] = otpEntry{code: code, expiresAt: time.Now().Add(s.otpExpiry)}
 	s.mu.Unlock()
+
+	if s.notif != nil {
+		s.notif.SendOTP(identifier, code)
+	} else {
+		log.Printf("[OTP] %s → %s", identifier, code)
+	}
 
 	return code, nil
 }
@@ -79,12 +92,14 @@ func (s *AuthService) VerifyOTP(ctx context.Context, identifier, code string) (s
 		return "", nil, fmt.Errorf("invalid OTP")
 	}
 
+	isPhone := IsPhone(identifier)
+
 	user, err := s.userRepo.FindByIdentifier(ctx, identifier)
 	if err != nil {
 		return "", nil, err
 	}
 	if user == nil {
-		user, err = s.userRepo.Create(ctx, identifier, model.RoleCustomer)
+		user, err = s.userRepo.UpsertWithContact(ctx, identifier, model.RoleCustomer, isPhone)
 		if err != nil {
 			return "", nil, err
 		}
@@ -95,6 +110,18 @@ func (s *AuthService) VerifyOTP(ctx context.Context, identifier, code string) (s
 		return "", nil, err
 	}
 	return token, user, nil
+}
+
+// IssueTokenForUser issues a JWT for an existing user — useful in tests and admin scripts.
+func (s *AuthService) IssueTokenForUser(ctx context.Context, userID int64) (string, error) {
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", fmt.Errorf("user %d not found", userID)
+	}
+	return s.issueJWT(user)
 }
 
 func (s *AuthService) issueJWT(user *model.User) (string, error) {

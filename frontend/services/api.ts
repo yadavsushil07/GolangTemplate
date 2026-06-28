@@ -2,8 +2,9 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const BASE_URL =
-  Platform.OS === 'android'
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL
+  ? `${process.env.EXPO_PUBLIC_API_URL}/api`
+  : Platform.OS === 'android'
     ? 'http://10.0.2.2:8080/api'
     : 'http://localhost:8080/api';
 
@@ -66,6 +67,13 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// --- Categories ---
+export const listCategories = () => api.get('/categories');
+
+// --- Coupons ---
+export const validateCoupon = (code: string, order_total_cents: number) =>
+  api.post('/coupons/validate', { code, order_total_cents });
+
 // --- Auth ---
 export const requestOTP = (identifier: string) =>
   api.post('/auth/request-otp', { identifier });
@@ -88,6 +96,12 @@ export const removeFromCart = (productId: number) =>
 export const checkout = (shipping_name: string, shipping_address: string, session_id: string) =>
   api.post('/checkout', { shipping_name, shipping_address, session_id });
 export const listMyOrders = () => api.get('/orders');
+
+// --- Razorpay ---
+export const createRazorpayOrder = (order_id: number, amount_cents: number) =>
+  api.post('/payments/razorpay/create-order', { order_id, amount_cents });
+export const verifyRazorpayPayment = (data: object) =>
+  api.post('/payments/razorpay/verify', data);
 
 // --- Vendor ---
 export const vendorListProducts = () => api.get('/vendor/products');

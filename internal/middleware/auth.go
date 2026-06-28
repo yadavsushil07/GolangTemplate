@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/yadavsushil07/GolangTemplate/internal/model"
 	"github.com/yadavsushil07/GolangTemplate/internal/service"
 )
 
@@ -35,10 +36,26 @@ func Auth(authSvc *service.AuthService) func(http.Handler) http.Handler {
 	}
 }
 
-func VendorOnly(next http.Handler) http.Handler {
+// VendorOrAdmin allows both vendor and admin roles.
+func VendorOrAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		role, _ := r.Context().Value(ContextUserRole).(string)
-		if role != "vendor" {
+		if role != model.RoleVendor && role != model.RoleAdmin {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// VendorOnly kept as alias for VendorOrAdmin for backward compatibility.
+var VendorOnly = VendorOrAdmin
+
+// AdminOnly allows only admin role.
+func AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, _ := r.Context().Value(ContextUserRole).(string)
+		if role != model.RoleAdmin {
 			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 			return
 		}

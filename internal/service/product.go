@@ -9,15 +9,17 @@ import (
 )
 
 type ProductService struct {
-	repo *repository.ProductRepository
+	repo        *repository.ProductRepository
+	variantRepo *repository.VariantRepository
+	catRepo     *repository.CategoryRepository
 }
 
-func NewProductService(repo *repository.ProductRepository) *ProductService {
-	return &ProductService{repo: repo}
+func NewProductService(repo *repository.ProductRepository, variantRepo *repository.VariantRepository, catRepo *repository.CategoryRepository) *ProductService {
+	return &ProductService{repo: repo, variantRepo: variantRepo, catRepo: catRepo}
 }
 
-func (s *ProductService) List(ctx context.Context, activeOnly bool) ([]model.Product, error) {
-	return s.repo.List(ctx, activeOnly)
+func (s *ProductService) List(ctx context.Context, activeOnly bool, categorySlug string) ([]model.Product, error) {
+	return s.repo.List(ctx, activeOnly, categorySlug)
 }
 
 func (s *ProductService) GetByID(ctx context.Context, id int64) (*model.Product, error) {
@@ -54,4 +56,30 @@ func (s *ProductService) Update(ctx context.Context, id int64, req model.UpdateP
 
 func (s *ProductService) Deactivate(ctx context.Context, id int64) error {
 	return s.repo.Deactivate(ctx, id)
+}
+
+func (s *ProductService) AddVariant(ctx context.Context, productID int64, req model.CreateVariantRequest) (*model.ProductVariant, error) {
+	if req.Size == "" {
+		return nil, fmt.Errorf("size is required")
+	}
+	if req.PriceCents <= 0 {
+		return nil, fmt.Errorf("price must be greater than zero")
+	}
+	return s.variantRepo.Create(ctx, productID, req)
+}
+
+func (s *ProductService) DeleteVariant(ctx context.Context, variantID int64) error {
+	return s.variantRepo.Delete(ctx, variantID)
+}
+
+func (s *ProductService) AddImages(ctx context.Context, productID int64, urls []string) error {
+	return s.variantRepo.AddImages(ctx, productID, urls)
+}
+
+func (s *ProductService) DeleteImage(ctx context.Context, imageID int64) error {
+	return s.variantRepo.DeleteImage(ctx, imageID)
+}
+
+func (s *ProductService) SetCategories(ctx context.Context, productID int64, categoryIDs []int64) error {
+	return s.catRepo.SetProductCategories(ctx, productID, categoryIDs)
 }

@@ -29,8 +29,9 @@ func (h *CartHandler) GetCart(w http.ResponseWriter, r *http.Request) {
 
 func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		ProductID int64 `json:"product_id"`
-		Quantity  int   `json:"quantity"`
+		ProductID int64  `json:"product_id"`
+		VariantID *int64 `json:"variant_id"`
+		Quantity  int    `json:"quantity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -38,7 +39,7 @@ func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionID := sessionIDFromRequest(r)
-	if err := h.cartSvc.AddItem(r.Context(), sessionID, body.ProductID, body.Quantity); err != nil {
+	if err := h.cartSvc.AddItem(r.Context(), sessionID, body.ProductID, body.VariantID, body.Quantity); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}

@@ -1,0 +1,14 @@
+.env
+*.env.local
+
+# Go binaries
+bin/
+dist/
+
+# Expo / React Native
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+
+# macOS
+.DS_Store

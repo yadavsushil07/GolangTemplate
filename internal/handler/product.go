@@ -17,7 +17,8 @@ func NewProductHandler(productSvc *service.ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) List(w http.ResponseWriter, r *http.Request) {
-	products, err := h.productSvc.List(r.Context(), true)
+	categorySlug := r.URL.Query().Get("category")
+	products, err := h.productSvc.List(r.Context(), true, categorySlug)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to fetch products")
 		return
