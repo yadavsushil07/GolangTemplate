@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AARYA — Admin · Inventory</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { background: #F4F1EC; }
+  .admin { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .side { background: var(--charcoal); color: #b7ab9c; padding: 26px 18px; position: sticky; top: 0; height: 100vh; }
+  .side .logo { text-align: left; color: var(--warm-white); font-size: 20px; margin-bottom: 4px; }
+  .side .role { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 30px; padding-left: 2px; }
+  .side a { display: flex; align-items: center; gap: 12px; font-size: 13px; letter-spacing: .5px; padding: 12px 14px; border-radius: 6px; margin-bottom: 4px; transition: .2s; }
+  .side a:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .side a.active { background: var(--emerald); color: #fff; }
+  .side .sep { border-top: 1px solid rgba(255,255,255,.08); margin: 20px 0; }
+
+  /* Main */
+  .main { padding: 28px 34px; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+  .top h1 { font-family: var(--font-display); font-size: 30px; font-style: italic; font-weight: 300; }
+  .top .actions { display: flex; gap: 12px; align-items: center; }
+  .search-box { padding: 10px 14px; border: 1px solid var(--border); background: #fff; font-family: var(--font-body); font-size: 13px; width: 220px; }
+
+  /* Stat cards */
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 28px; }
+  .stat { background: #fff; border: 1px solid var(--border); padding: 22px; border-radius: 8px; }
+  .stat .label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  .stat .num { font-family: var(--font-display); font-size: 34px; font-weight: 400; margin: 6px 0 2px; }
+  .stat .delta { font-size: 12px; }
+  .stat .delta.up { color: var(--emerald); }
+  .stat .delta.down { color: var(--deep-rose); }
+
+  /* Table */
+  .panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+  .panel-head h3 { font-family: var(--font-display); font-size: 20px; font-style: italic; }
+  .tabs { display: flex; gap: 4px; }
+  .tabs a { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 7px 14px; border-radius: 5px; color: var(--muted); }
+  .tabs a.active { background: var(--sand); color: var(--charcoal); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 14px 22px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  td { padding: 16px 22px; border-bottom: 1px solid #F0EBE2; font-size: 13px; vertical-align: middle; }
+  tr:hover td { background: #FBF9F5; }
+  .prod-cell { display: flex; align-items: center; gap: 12px; }
+  .prod-thumb { width: 42px; height: 54px; border-radius: 4px; }
+  .prod-cell .pn { font-family: var(--font-display); font-size: 15px; }
+  .prod-cell .pc { font-size: 11px; color: var(--blush); letter-spacing: 1px; text-transform: uppercase; }
+  .pill { font-size: 11px; letter-spacing: .5px; padding: 4px 10px; border-radius: 999px; display: inline-block; }
+  .pill.in { background: #E8EBDD; color: #5C6B47; }
+  .pill.low { background: #FBEFD9; color: #A6791E; }
+  .pill.out { background: #F5E1E1; color: var(--deep-rose); }
+  .pill.draft { background: #ECE8E1; color: var(--muted); }
+  .stock-bar { width: 90px; height: 6px; border-radius: 3px; background: #EDE7DD; overflow: hidden; }
+  .stock-bar i { display: block; height: 100%; border-radius: 3px; }
+  .row-act a { font-size: 15px; margin-left: 12px; opacity: .6; }
+  .row-act a:hover { opacity: 1; color: var(--blush); }
+  .btn-sm { font-size: 11px; letter-spacing: 1.5px; padding: 10px 18px; }
+
+  @media (max-width:900px){
+    .admin{ grid-template-columns: 1fr; }
+    .side{ position: static; height: auto; display: none; }
+    .stats{ grid-template-columns: 1fr 1fr; }
+    .search-box{ display: none; }
+    table{ display: block; overflow-x: auto; white-space: nowrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="admin">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <a href="home.html" class="logo">AARY<span style="color:var(--gold);font-style:italic;">A</span></a>
+    <div class="role">Admin Console</div>
+    <a href="#">▚ Dashboard</a>
+    <a href="#" class="active">▦ Inventory</a>
+    <a href="#">✎ Add Product</a>
+    <a href="#">◷ Orders <span style="margin-left:auto; background:var(--deep-rose); color:#fff; font-size:10px; border-radius:999px; padding:1px 7px;">6</span></a>
+    <a href="#">❋ Collections</a>
+    <a href="#">% Coupons</a>
+    <div class="sep"></div>
+    <a href="#">◊ Customers</a>
+    <a href="#">⚙ Settings</a>
+    <a href="home.html">↩ View Storefront</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="top">
+      <div>
+        <h1>Inventory</h1>
+        <p style="font-size:12px; color:var(--muted); letter-spacing:.5px;">Manage products, variants &amp; stock levels</p>
+      </div>
+      <div class="actions">
+        <input class="search-box" placeholder="Search products…">
+        <a href="#" class="btn btn-outline dark btn-sm">Export CSV</a>
+        <a href="#" class="btn btn-primary btn-sm">+ Add Product</a>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat"><div class="label">Total Products</div><div class="num">48</div><div class="delta up">▲ 4 this week</div></div>
+      <div class="stat"><div class="label">Low Stock</div><div class="num" style="color:#A6791E;">5</div><div class="delta down">Needs restock</div></div>
+      <div class="stat"><div class="label">Out of Stock</div><div class="num" style="color:var(--deep-rose);">2</div><div class="delta down">▼ Hidden from store</div></div>
+      <div class="stat"><div class="label">Inventory Value</div><div class="num">₹9.4L</div><div class="delta up">▲ 6.2%</div></div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3>All Products</h3>
+        <div class="tabs">
+          <a class="active">All</a><a>Active</a><a>Low Stock</a><a>Out of Stock</a><a>Drafts</a>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Product</th><th>SKU</th><th>Category</th><th>Variants</th><th>Stock</th><th>Price</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#E7D3C4,#cfa98f)"></div><div><div class="pn">Pink Chanderi Suit Set</div><div class="pc">Séraphine</div></div></div></td>
+            <td>AAR-SER-001</td><td>Suit Sets</td><td>XS · S · M · L</td>
+            <td><div class="stock-bar"><i style="width:80%; background:var(--emerald);"></i></div><span style="font-size:11px; color:var(--muted);">32 in stock</span></td>
+            <td>₹24,350</td><td><span class="pill in">In Stock</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#DED4BD,#bca97f)"></div><div><div class="pn">Powder Pink Co-ord Set</div><div class="pc">Amara</div></div></div></td>
+            <td>AAR-AMR-004</td><td>Co-ord Sets</td><td>S · M · L</td>
+            <td><div class="stock-bar"><i style="width:22%; background:#C79A2E;"></i></div><span style="font-size:11px; color:var(--muted);">6 left</span></td>
+            <td>₹16,700</td><td><span class="pill low">Low Stock</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#D7C4C9,#b0909d)"></div><div><div class="pn">Emerald Zardozi Anarkali</div><div class="pc">Noor</div></div></div></td>
+            <td>AAR-NOR-009</td><td>Anarkali</td><td>S · M · L · XL</td>
+            <td><div class="stock-bar"><i style="width:60%; background:var(--emerald);"></i></div><span style="font-size:11px; color:var(--muted);">21 in stock</span></td>
+            <td>₹27,200</td><td><span class="pill in">In Stock</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#D9BFB6,#bf9384)"></div><div><div class="pn">Maroon Gharara Set</div><div class="pc">Meher</div></div></div></td>
+            <td>AAR-MEH-012</td><td>Gharara</td><td>Custom / MTO</td>
+            <td><div class="stock-bar"><i style="width:100%; background:var(--emerald);"></i></div><span style="font-size:11px; color:var(--muted);">Made to order</span></td>
+            <td>₹21,900</td><td><span class="pill in">In Stock</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#DED4BD,#bca97f)"></div><div><div class="pn">Sage Green Sharara Set</div><div class="pc">Alaya</div></div></div></td>
+            <td>AAR-ALA-017</td><td>Sharara Sets</td><td>S · M · L</td>
+            <td><div class="stock-bar"><i style="width:0%; background:var(--deep-rose);"></i></div><span style="font-size:11px; color:var(--deep-rose);">0 — sold out</span></td>
+            <td>₹18,500</td><td><span class="pill out">Out of Stock</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+          <tr>
+            <td><div class="prod-cell"><div class="prod-thumb" style="background:linear-gradient(135deg,#d8c9b0,#c4ac85)"></div><div><div class="pn">Marigold Anarkali Set</div><div class="pc">Devika</div></div></div></td>
+            <td>AAR-DEV-021</td><td>Anarkali</td><td>Draft</td>
+            <td><span style="font-size:11px; color:var(--muted);">— not published</span></td>
+            <td>₹25,600</td><td><span class="pill draft">Draft</span></td>
+            <td class="row-act"><a>✎</a><a>⌦</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 22px; font-size:12px; color:var(--muted);">
+        <span>Showing 6 of 48 products</span>
+        <div class="pagination" style="margin:0;">
+          <a style="width:34px;height:34px;">‹</a><a class="active" style="width:34px;height:34px;">1</a><a style="width:34px;height:34px;">2</a><a style="width:34px;height:34px;">3</a><a style="width:34px;height:34px;">›</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

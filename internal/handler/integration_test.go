@@ -43,8 +43,9 @@ func buildRouter(t *testing.T, tdb *testutil.TestDB) http.Handler {
 	cartH := handler.NewCartHandler(cartSvc)
 	orderH := handler.NewOrderHandler(orderSvc, couponSvc, nil)
 	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo)
+	adminH := handler.NewAdminHandler(userRepo, orderRepo, orderSvc)
 
-	return router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, 100)
+	return router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, adminH, 100, []string{"*"})
 }
 
 func do(r http.Handler, method, path string, body any, token, sessionID string) *httptest.ResponseRecorder {

@@ -88,7 +88,7 @@ func main() {
 	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo)
 	adminH := handler.NewAdminHandler(userRepo, orderRepo, orderSvc)
 
-	r := router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, adminH, cfg.RateLimitPerMinute)
+	r := router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, adminH, cfg.RateLimitPerMinute, cfg.AllowedOrigins)
 
 	addr := ":" + cfg.Port
 	log.Printf("server listening on http://localhost%s", addr)

@@ -21,17 +21,20 @@ func New(
 	vendorH *handler.VendorHandler,
 	adminH *handler.AdminHandler,
 	rateLimitPerMinute int,
+	allowedOrigins []string,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RealIP)
+	r.Use(middleware.SecurityHeaders)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Session-ID"},
 		AllowCredentials: true,
+		MaxAge:           300,
 	}))
 	r.Use(middleware.RateLimit(rateLimitPerMinute))
 
@@ -48,6 +51,7 @@ func New(
 
 		// Products — public (supports ?category=slug)
 		r.Get("/products", productH.List)
+		r.Get("/products/slug/{slug}", productH.GetBySlug)
 		r.Get("/products/{id}", productH.GetByID)
 
 		// Categories — public

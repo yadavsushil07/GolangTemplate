@@ -1,121 +1,63 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { Button } from './Button';
+"use client";
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price_cents: number;
-  image_url: string;
-  stock: number;
-}
+import Link from "next/link";
+import { useState } from "react";
+import type { Product } from "@/lib/types";
+import { formatPrice } from "@/lib/format";
+import { useCart } from "@/lib/cart-context";
+import ProductArt from "./ProductArt";
 
-interface Props {
-  product: Product;
-  onAddToCart: (id: number) => void;
-  onPress: (id: number) => void;
-  adding?: boolean;
-}
+export default function ProductCard({ product }: { product: Product }) {
+  const { add } = useCart();
+  const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState(false);
 
-export function ProductCard({ product, onAddToCart, onPress, adding }: Props) {
-  const { width } = useWindowDimensions();
-  const isWide = width >= 768;
+  async function quickAdd(e: React.MouseEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    try {
+      await add(product.id, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const collection = product.categories?.[0]?.name;
 
   return (
-    <TouchableOpacity
-      style={[styles.card, isWide && styles.cardWide]}
-      onPress={() => onPress(product.id)}
-      activeOpacity={0.9}
-    >
-      {product.image_url ? (
-        <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />
-      ) : (
-        <View style={styles.imagePlaceholder}>
-          <Text style={styles.imagePlaceholderText}>📦</Text>
-        </View>
+    <Link href={`/product/${product.slug}`} className="group block">
+      <div className="card-media mb-4 group-hover:shadow-luxe transition-shadow">
+        <ProductArt
+          seed={product.id}
+          imageUrl={product.image_url}
+          label={product.name}
+          className="group-hover:scale-105 transition-transform duration-700"
+        />
+        {product.stock <= 0 && (
+          <span className="absolute top-3.5 left-3.5 bg-plum text-white text-[9px] tracking-[0.14em] uppercase px-3 py-1.5">
+            Sold Out
+          </span>
+        )}
+        <button
+          onClick={quickAdd}
+          disabled={busy || product.stock <= 0}
+          className="absolute inset-x-0 bottom-0 bg-ink/90 text-white text-[10px] tracking-[0.22em] uppercase py-3.5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all disabled:opacity-60"
+        >
+          {added ? "Added ✓" : busy ? "Adding…" : "Quick Add +"}
+        </button>
+      </div>
+      {collection && (
+        <div className="text-[10px] tracking-[0.22em] uppercase text-champ">
+          {collection}
+        </div>
       )}
-      <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
-        <Text style={styles.desc} numberOfLines={2}>{product.description}</Text>
-        <View style={styles.footer}>
-          <Text style={styles.price}>${(product.price_cents / 100).toFixed(2)}</Text>
-          {product.stock > 0 ? (
-            <Button
-              title="Add to cart"
-              onPress={() => onAddToCart(product.id)}
-              loading={adding}
-              style={styles.btn}
-            />
-          ) : (
-            <Text style={styles.outOfStock}>Out of stock</Text>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
+      <h3 className="font-display text-lg leading-snug my-1">{product.name}</h3>
+      <div className="text-sm text-muted">{formatPrice(product.price_cents)}</div>
+    </Link>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  cardWide: {
-    flex: 1,
-    margin: 8,
-  },
-  image: {
-    width: '100%',
-    height: 180,
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 140,
-    backgroundColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imagePlaceholderText: {
-    fontSize: 40,
-  },
-  body: {
-    padding: 16,
-    gap: 8,
-  },
-  name: {
-    color: Colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  desc: {
-    color: Colors.muted,
-    fontSize: 13,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  price: {
-    color: Colors.primary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  btn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    minHeight: 36,
-  },
-  outOfStock: {
-    color: Colors.error,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});

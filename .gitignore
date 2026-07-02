@@ -4,11 +4,16 @@
 # Go binaries
 bin/
 dist/
+app
+*.exe
 
-# Expo / React Native
+# Next.js frontend
 frontend/node_modules/
+frontend/.next/
+frontend/out/
 frontend/.expo/
 frontend/dist/
+npm-debug.log*
 
 # macOS
 .DS_Store

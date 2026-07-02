@@ -39,7 +39,7 @@ func (r *ProductRepository) List(ctx context.Context, activeOnly bool, categoryS
 		i++
 	}
 
-	query := `SELECT p.id, p.name, p.description, p.price_cents, p.image_url, p.stock, p.is_active, p.created_at, p.updated_at FROM products p`
+	query := `SELECT p.id, p.name, p.slug, p.description, p.price_cents, p.image_url, p.stock, p.is_active, p.created_at, p.updated_at FROM products p`
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -54,7 +54,7 @@ func (r *ProductRepository) List(ctx context.Context, activeOnly bool, categoryS
 	var products []model.Product
 	for rows.Next() {
 		var p model.Product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Slug, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		products = append(products, p)
@@ -62,11 +62,24 @@ func (r *ProductRepository) List(ctx context.Context, activeOnly bool, categoryS
 	return products, rows.Err()
 }
 
+// FindBySlug resolves a product by its SEO slug, then loads it fully.
+func (r *ProductRepository) FindBySlug(ctx context.Context, slug string) (*model.Product, error) {
+	var id int64
+	err := r.db.QueryRow(ctx, `SELECT id FROM products WHERE slug = $1`, slug).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return r.FindByID(ctx, id)
+}
+
 func (r *ProductRepository) FindByID(ctx context.Context, id int64) (*model.Product, error) {
 	p := &model.Product{}
 	err := r.db.QueryRow(ctx,
-		`SELECT id, name, description, price_cents, image_url, stock, is_active, created_at, updated_at FROM products WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+		`SELECT id, name, slug, description, price_cents, image_url, stock, is_active, created_at, updated_at FROM products WHERE id = $1`, id,
+	).Scan(&p.ID, &p.Name, &p.Slug, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -125,17 +138,49 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int64) (*model.Prod
 }
 
 func (r *ProductRepository) Create(ctx context.Context, req model.CreateProductRequest) (*model.Product, error) {
+	// Generate a URL-safe slug from the name, then guarantee uniqueness by
+	// appending the row id. A provisional random slug avoids a unique-index
+	// collision during the initial INSERT.
+	base := slugify(req.Name)
 	p := &model.Product{}
 	err := r.db.QueryRow(ctx,
-		`INSERT INTO products (name, description, price_cents, image_url, stock)
-		 VALUES ($1, $2, $3, $4, $5)
-		 RETURNING id, name, description, price_cents, image_url, stock, is_active, created_at, updated_at`,
-		req.Name, req.Description, req.PriceCents, req.ImageURL, req.Stock,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+		`WITH ins AS (
+			INSERT INTO products (name, description, price_cents, image_url, stock, slug)
+			VALUES ($1, $2, $3, $4, $5, md5(random()::text))
+			RETURNING id
+		)
+		UPDATE products p SET slug = $6 || '-' || p.id
+		FROM ins WHERE p.id = ins.id
+		RETURNING p.id, p.name, p.slug, p.description, p.price_cents, p.image_url, p.stock, p.is_active, p.created_at, p.updated_at`,
+		req.Name, req.Description, req.PriceCents, req.ImageURL, req.Stock, base,
+	).Scan(&p.ID, &p.Name, &p.Slug, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return p, nil
+}
+
+// slugify converts an arbitrary product name into a lowercase, dash-separated
+// URL slug containing only [a-z0-9] and single dashes.
+func slugify(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	var b strings.Builder
+	prevDash := false
+	for _, r := range s {
+		switch {
+		case (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9'):
+			b.WriteRune(r)
+			prevDash = false
+		case !prevDash:
+			b.WriteRune('-')
+			prevDash = true
+		}
+	}
+	out := strings.Trim(b.String(), "-")
+	if out == "" {
+		out = "product"
+	}
+	return out
 }
 
 func (r *ProductRepository) Update(ctx context.Context, id int64, req model.UpdateProductRequest) (*model.Product, error) {
@@ -164,13 +209,13 @@ func (r *ProductRepository) Update(ctx context.Context, id int64, req model.Upda
 
 	args = append(args, id)
 	query := fmt.Sprintf(
-		`UPDATE products SET %s WHERE id = $%d RETURNING id, name, description, price_cents, image_url, stock, is_active, created_at, updated_at`,
+		`UPDATE products SET %s WHERE id = $%d RETURNING id, name, slug, description, price_cents, image_url, stock, is_active, created_at, updated_at`,
 		strings.Join(sets, ", "), i,
 	)
 
 	p := &model.Product{}
 	err := r.db.QueryRow(ctx, query, args...).Scan(
-		&p.ID, &p.Name, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt,
+		&p.ID, &p.Name, &p.Slug, &p.Description, &p.PriceCents, &p.ImageURL, &p.Stock, &p.IsActive, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

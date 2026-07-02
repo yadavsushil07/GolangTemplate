@@ -39,3 +39,17 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, product)
 }
+
+func (h *ProductHandler) GetBySlug(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	if slug == "" {
+		writeError(w, http.StatusBadRequest, "invalid product slug")
+		return
+	}
+	product, err := h.productSvc.GetBySlug(r.Context(), slug)
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, product)
+}

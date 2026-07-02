@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AARYA — UI Mockups</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hero-band { background: linear-gradient(160deg,var(--plum),#2C1926); color: var(--warm-white); padding: 70px 60px; text-align: center; }
+  .hero-band .eyebrow { justify-content: center; color: var(--gold); }
+  .hero-band h1 { font-family: var(--font-display); font-size: clamp(40px,5vw,64px); font-style: italic; font-weight: 300; margin: 12px 0; }
+  .hero-band p { font-size: 14px; color: #b6a892; max-width: 560px; margin: 0 auto; }
+  .gallery { display: grid; grid-template-columns: repeat(3,1fr); gap: 26px; padding: 60px; }
+  .screen { border: 1px solid var(--border); background: #fff; overflow: hidden; transition: .25s; }
+  .screen:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--blush); }
+  .screen-preview { aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-style: italic; font-size: 40px; color: rgba(255,255,255,.85); }
+  .screen-body { padding: 20px 22px; }
+  .screen-body .n { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--blush); }
+  .screen-body h3 { font-family: var(--font-display); font-size: 22px; font-style: italic; margin: 3px 0 6px; }
+  .screen-body p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .screen-body .open { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid var(--charcoal); padding-bottom: 2px; margin-top: 12px; display: inline-block; }
+  .screen-body .open:hover { color: var(--blush); border-color: var(--blush); }
+  .note-bar { background: var(--sand); padding: 22px 60px; font-size: 13px; color: #5a5145; text-align: center; }
+  @media (max-width:900px){ .gallery{ grid-template-columns: 1fr 1fr; padding: 40px 24px; } }
+  @media (max-width:600px){ .gallery{ grid-template-columns: 1fr; } .hero-band{ padding: 50px 24px; } }
+</style>
+</head>
+<body>
+
+<div class="hero-band">
+  <div class="eyebrow center">Atelier of Handcrafted Couture · UI Mockups</div>
+  <h1>AARYA</h1>
+  <p>Responsive design screens for the clothing storefront and admin console — inspired by theaaryashop.com. Click any screen to open it. Resize your browser to preview mobile / tablet / desktop.</p>
+</div>
+
+<div class="note-bar">💡 These are static HTML mockups (a free Figma alternative). They define the look &amp; feel that the Next.js frontend will be built to match.</div>
+
+<div class="gallery">
+  <a href="home.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(160deg,var(--plum),#2C1926)">Home</div>
+    <div class="screen-body"><div class="n">Storefront · 01</div><h3>Homepage</h3><p>Hero, category tiles, new arrivals, celebrity closet, bestsellers &amp; benefits.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="shop.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,var(--clay),var(--clay-dk))">Shop</div>
+    <div class="screen-body"><div class="n">Storefront · 02</div><h3>Shop / Listing</h3><p>Filters (category, size, colour, price), sort, product grid &amp; pagination.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="product.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,var(--wine),#4a1e2e)">Product</div>
+    <div class="screen-body"><div class="n">Storefront · 03</div><h3>Product Detail</h3><p>Gallery, variant &amp; size selector, made-to-order note, add to bag, related.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="cart.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,var(--champ),#8a6b28)">Cart</div>
+    <div class="screen-body"><div class="n">Storefront · 04</div><h3>Shopping Bag</h3><p>Line items, quantity, coupon code &amp; order summary.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="checkout.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,#4A4038,#262019)">Checkout</div>
+    <div class="screen-body"><div class="n">Storefront · 05</div><h3>Checkout</h3><p>OTP verify, shipping, customization note, Razorpay / COD payment.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="account.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,#6E5A48,#3A2F24)">Login</div>
+    <div class="screen-body"><div class="n">Storefront · 06</div><h3>Account / OTP Login</h3><p>Passwordless sign-in with one-time password via SMS or email.</p><span class="open">Open Screen →</span></div>
+  </a>
+  <a href="admin.html" class="screen">
+    <div class="screen-preview" style="background:linear-gradient(135deg,#262019,#4A4038)">Admin</div>
+    <div class="screen-body"><div class="n">Console · 07</div><h3>Admin — Inventory</h3><p>Stat cards, product table, stock levels, variants, status &amp; actions.</p><span class="open">Open Screen →</span></div>
+  </a>
+</div>
+
+<footer>
+  <div class="footer-bottom" style="border:none; padding-top:0;"><span>© 2026 AARYA — UI Mockups.</span><div class="social"><a href="home.html">Storefront</a><a href="admin.html">Admin</a></div></div>
+</footer>
+
+</body>
+</html>
