@@ -10,7 +10,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS
 -- Vendor config: stores vendor contact details for notifications
 CREATE TABLE IF NOT EXISTS vendor_config (
     id           SERIAL PRIMARY KEY,
-    vendor_name  TEXT NOT NULL DEFAULT 'AaryaShop',
+    vendor_name  TEXT NOT NULL DEFAULT 'SBY TWILIGHT',
     phone        TEXT,
     email        TEXT,
     whatsapp     TEXT,

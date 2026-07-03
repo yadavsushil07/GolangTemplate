@@ -37,6 +37,7 @@ func New(
 		MaxAge:           300,
 	}))
 	r.Use(middleware.RateLimit(rateLimitPerMinute))
+	r.Use(chimiddleware.RequestSize(64 * 1024)) // 64 KB max body
 
 	r.Get("/", handler.HomeHandler)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -45,9 +46,9 @@ func New(
 	})
 
 	r.Route("/api", func(r chi.Router) {
-		// Auth — public
-		r.Post("/auth/request-otp", authH.RequestOTP)
-		r.Post("/auth/verify-otp", authH.VerifyOTP)
+		// Auth — public (OTP brute-force protected per identifier)
+		r.With(middleware.OTPRateLimit).Post("/auth/request-otp", authH.RequestOTP)
+		r.With(middleware.OTPRateLimit).Post("/auth/verify-otp", authH.VerifyOTP)
 
 		// Products — public (supports ?category=slug)
 		r.Get("/products", productH.List)

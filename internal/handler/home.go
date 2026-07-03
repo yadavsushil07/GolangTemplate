@@ -8,7 +8,7 @@ import (
 // separate Next.js frontend, so this just returns a small JSON pointer.
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
-		"service": "aarya-api",
+		"service": "sby-twilight-api",
 		"status":  "ok",
 		"docs":    "/api",
 	})

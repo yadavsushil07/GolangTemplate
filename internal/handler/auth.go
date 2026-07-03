@@ -40,13 +40,14 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Identifier string `json:"identifier"`
 		Code       string `json:"code"`
+		RememberMe bool   `json:"remember_me"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	token, user, err := h.authSvc.VerifyOTP(r.Context(), body.Identifier, body.Code)
+	token, user, err := h.authSvc.VerifyOTP(r.Context(), body.Identifier, body.Code, body.RememberMe)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, err.Error())
 		return

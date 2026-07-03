@@ -9,32 +9,66 @@ import type {
 const API_BASE =
   (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080") + "/api";
 
-const TOKEN_KEY = "aarya_token";
-const ROLE_KEY = "aarya_role";
-const SESSION_KEY = "aarya_session";
+const TOKEN_KEY = "sby_token";
+const ROLE_KEY = "sby_role";
+const SESSION_KEY = "sby_session";
 
 // ---- local persistence (browser only) ----
 const isBrowser = typeof window !== "undefined";
 
 export function getToken(): string | null {
-  return isBrowser ? localStorage.getItem(TOKEN_KEY) : null;
+  if (!isBrowser) return null;
+  return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
 }
-export function setToken(token: string) {
-  if (isBrowser) localStorage.setItem(TOKEN_KEY, token);
+
+export function setToken(token: string, remember: boolean) {
+  if (!isBrowser) return;
+  if (remember) {
+    localStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.removeItem(TOKEN_KEY);
+  } else {
+    sessionStorage.setItem(TOKEN_KEY, token);
+    localStorage.removeItem(TOKEN_KEY);
+  }
 }
+
 export function getRole(): string | null {
-  return isBrowser ? localStorage.getItem(ROLE_KEY) : null;
+  if (!isBrowser) return null;
+  return localStorage.getItem(ROLE_KEY) ?? sessionStorage.getItem(ROLE_KEY);
 }
-export function setRole(role: string) {
-  if (isBrowser) localStorage.setItem(ROLE_KEY, role);
+
+export function setRole(role: string, remember: boolean) {
+  if (!isBrowser) return;
+  if (remember) {
+    localStorage.setItem(ROLE_KEY, role);
+    sessionStorage.removeItem(ROLE_KEY);
+  } else {
+    sessionStorage.setItem(ROLE_KEY, role);
+    localStorage.removeItem(ROLE_KEY);
+  }
 }
+
 export function logout() {
   if (!isBrowser) return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ROLE_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(ROLE_KEY);
 }
+
 export function isLoggedIn(): boolean {
-  return !!getToken();
+  return !!getToken() && !isTokenExpired();
+}
+
+export function isTokenExpired(): boolean {
+  const token = getToken();
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
 }
 
 export function getSessionID(): string {
@@ -90,13 +124,13 @@ export const requestOTP = (identifier: string) =>
     body: JSON.stringify({ identifier }),
   });
 
-export async function verifyOTP(identifier: string, code: string) {
+export async function verifyOTP(identifier: string, code: string, rememberMe = false) {
   const res = await request<{ token: string; user: User }>(
     "/auth/verify-otp",
-    { method: "POST", body: JSON.stringify({ identifier, code }) }
+    { method: "POST", body: JSON.stringify({ identifier, code, remember_me: rememberMe }) }
   );
-  setToken(res.token);
-  if (res.user?.role) setRole(res.user.role);
+  setToken(res.token, rememberMe);
+  if (res.user?.role) setRole(res.user.role, rememberMe);
   return res;
 }
 

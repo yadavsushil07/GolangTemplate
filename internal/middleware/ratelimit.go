@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -62,4 +65,30 @@ func clientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return ip
+}
+
+var otpIdentifierLimiter = newRateLimiter(15*time.Minute, 5)
+
+func OTPRateLimit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		r.Body.Close()
+		if err != nil {
+			http.Error(w, `{"error":"bad request"}`, http.StatusBadRequest)
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewReader(body))
+
+		var payload struct {
+			Identifier string `json:"identifier"`
+		}
+		_ = json.Unmarshal(body, &payload)
+
+		if payload.Identifier != "" && !otpIdentifierLimiter.allow(payload.Identifier) {
+			http.Error(w, `{"error":"too many attempts, try again later"}`, http.StatusTooManyRequests)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

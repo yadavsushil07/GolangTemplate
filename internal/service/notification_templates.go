@@ -35,17 +35,17 @@ const baseStyle = `
 `
 
 func htmlPage(content string) string {
-	return fmt.Sprintf(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>%s</style></head><body><div class="wrap">%s<div class="footer">AaryaShop &copy; 2026 &nbsp;|&nbsp; Celebrating Indian Heritage</div></div></body></html>`, baseStyle, content)
+	return fmt.Sprintf(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>%s</style></head><body><div class="wrap">%s<div class="footer">SBY TWILIGHT &copy; 2026 &nbsp;|&nbsp; Kurla West, Mumbai 400070</div></div></body></html>`, baseStyle, content)
 }
 
 // otpEmailHTML generates the OTP email body.
 func otpEmailHTML(otp string) string {
 	content := fmt.Sprintf(`
-<div class="header"><h1>AaryaShop</h1><p>Your login code</p></div>
+<div class="header"><h1>SBY TWILIGHT</h1><p>Your login code</p></div>
 <div class="body">
   <div class="badge">OTP</div>
   <h2>Your One-Time Password</h2>
-  <p>Use the code below to log in to your AaryaShop account. It is valid for <strong>5 minutes</strong>.</p>
+  <p>Use the code below to log in to your SBY TWILIGHT account. It is valid for <strong>5 minutes</strong>.</p>
   <div style="text-align:center;margin:28px 0;">
     <div style="font-size:42px;font-weight:900;letter-spacing:12px;color:#0f172a;background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:20px;">%s</div>
   </div>
@@ -91,7 +91,7 @@ func orderConfirmationHTML(order *model.Order) string {
 	}
 
 	content := fmt.Sprintf(`
-<div class="header"><h1>AaryaShop</h1><p>Order Confirmation</p></div>
+<div class="header"><h1>SBY TWILIGHT</h1><p>Order Confirmation</p></div>
 <div class="body">
   <div class="badge">ORDER PLACED</div>
   <h2>Thank you for your order!</h2>
@@ -153,7 +153,7 @@ func orderStatusHTML(order *model.Order, status string) string {
 	timeline += `</div>`
 
 	content := fmt.Sprintf(`
-<div class="header"><h1>AaryaShop</h1><p>Order Update</p></div>
+<div class="header"><h1>SBY TWILIGHT</h1><p>Order Update</p></div>
 <div class="body">
   <div class="badge">%s</div>
   <h2>%s</h2>
@@ -195,7 +195,7 @@ func vendorAlertHTML(order *model.Order) string {
 	}
 
 	content := fmt.Sprintf(`
-<div class="header"><h1>AaryaShop</h1><p>New Order Alert</p></div>
+<div class="header"><h1>SBY TWILIGHT</h1><p>New Order Alert</p></div>
 <div class="body">
   <div class="badge">NEW ORDER</div>
   <h2>Order #%d Received</h2>

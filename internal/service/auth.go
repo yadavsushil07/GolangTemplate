@@ -71,7 +71,7 @@ func (s *AuthService) RequestOTP(identifier string) (string, error) {
 	return code, nil
 }
 
-func (s *AuthService) VerifyOTP(ctx context.Context, identifier, code string) (string, *model.User, error) {
+func (s *AuthService) VerifyOTP(ctx context.Context, identifier, code string, remember ...bool) (string, *model.User, error) {
 	identifier = strings.TrimSpace(identifier)
 	code = strings.TrimSpace(code)
 
@@ -105,7 +105,13 @@ func (s *AuthService) VerifyOTP(ctx context.Context, identifier, code string) (s
 		}
 	}
 
-	token, err := s.issueJWT(user)
+	rem := len(remember) > 0 && remember[0]
+	ttl := 24 * time.Hour
+	if rem {
+		ttl = 30 * 24 * time.Hour
+	}
+
+	token, err := s.issueJWT(user, ttl)
 	if err != nil {
 		return "", nil, err
 	}
@@ -121,16 +127,16 @@ func (s *AuthService) IssueTokenForUser(ctx context.Context, userID int64) (stri
 	if user == nil {
 		return "", fmt.Errorf("user %d not found", userID)
 	}
-	return s.issueJWT(user)
+	return s.issueJWT(user, 24*time.Hour)
 }
 
-func (s *AuthService) issueJWT(user *model.User) (string, error) {
+func (s *AuthService) issueJWT(user *model.User, ttl time.Duration) (string, error) {
 	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
 	payloadJSON, err := json.Marshal(map[string]any{
 		"sub":  fmt.Sprintf("%d", user.ID),
 		"id":   user.ID,
 		"role": user.Role,
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
+		"exp":  time.Now().Add(ttl).Unix(),
 	})
 	if err != nil {
 		return "", err

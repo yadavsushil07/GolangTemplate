@@ -7,18 +7,28 @@ export default function Footer() {
         <div className="col-span-2 md:col-span-1">
           <Link
             href="/"
-            className="font-display text-xl tracking-[0.3em] uppercase text-warmwhite block mb-4"
+            className="font-display text-xl tracking-[0.25em] uppercase text-warmwhite block mb-4"
           >
-            AARY<span className="text-champ italic">A</span>
+            SBY <span className="text-champ italic">TWILIGHT</span>
           </Link>
           <p className="text-xs leading-relaxed max-w-[270px] mb-4">
-            An atelier of handcrafted couture — where heritage meets the modern
-            silhouette. Each piece made to order.
+            Handcrafted Indian fashion — where every piece tells a story.
+            Made to order, shipped across the world.
           </p>
           <div className="text-[11px] leading-loose">
-            hello@aarya-atelier.com
+            <a href="mailto:sby.twilight4@gmail.com" className="hover:text-clay transition-colors">
+              sby.twilight4@gmail.com
+            </a>
             <br />
-            +91 90000 00000
+            <a href="tel:+918591805622" className="hover:text-clay transition-colors">
+              +91 85918 05622
+            </a>
+            <br />
+            <span className="text-[10px] text-[#6b6259] leading-relaxed block mt-1">
+              Vijay Estate, Kallu Pawala Chawal,<br />
+              Halav Pool, Near Dhobi Ghat,<br />
+              Kurla West, Mumbai 400070
+            </span>
           </div>
         </div>
         <FooterCol
@@ -34,7 +44,7 @@ export default function Footer() {
           heading="Account"
           links={[
             ["Sign In", "/account"],
-            ["My Orders", "/account"],
+            ["My Orders", "/account/orders"],
             ["Cart", "/cart"],
           ]}
         />
@@ -49,9 +59,14 @@ export default function Footer() {
         />
       </div>
       <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-[11px]">
-        <span>© 2026 AARYA. All rights reserved.</span>
+        <span>© 2026 SBY TWILIGHT. All rights reserved.</span>
         <div className="flex gap-4">
-          <a href="#" className="hover:text-clay">
+          <a
+            href="https://instagram.com/sby_twilight"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-clay"
+          >
             Instagram
           </a>
           <a href="#" className="hover:text-clay">

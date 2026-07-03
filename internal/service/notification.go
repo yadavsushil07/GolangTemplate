@@ -68,7 +68,7 @@ func (n *NotificationService) SendOTP(identifier, otp string) {
 			return
 		}
 		go func() {
-			if err := n.sendSMS(identifier, fmt.Sprintf("Your AaryaShop OTP is %s. Valid for 5 minutes.", otp)); err != nil {
+			if err := n.sendSMS(identifier, fmt.Sprintf("Your SBY TWILIGHT OTP is %s. Valid for 5 minutes.", otp)); err != nil {
 				log.Printf("[NotificationService] SMS OTP failed for %s: %v", identifier, err)
 			}
 		}()
@@ -78,7 +78,7 @@ func (n *NotificationService) SendOTP(identifier, otp string) {
 			return
 		}
 		go func() {
-			subject := "Your AaryaShop OTP"
+			subject := "Your SBY TWILIGHT OTP"
 			body := otpEmailHTML(otp)
 			if err := n.sendEmail(identifier, subject, body); err != nil {
 				log.Printf("[NotificationService] Email OTP failed for %s: %v", identifier, err)
@@ -89,7 +89,7 @@ func (n *NotificationService) SendOTP(identifier, otp string) {
 
 // SendOrderConfirmation notifies the customer after a successful order.
 func (n *NotificationService) SendOrderConfirmation(ctx context.Context, order *model.Order, identifier string) {
-	msg := fmt.Sprintf("Order #%d confirmed! Total: ₹%d. We will update you when it ships. - AaryaShop",
+	msg := fmt.Sprintf("Order #%d confirmed! Total: ₹%d. We will update you when it ships. - SBY TWILIGHT",
 		order.ID, order.TotalCents/100)
 
 	if IsPhone(identifier) {
@@ -100,7 +100,7 @@ func (n *NotificationService) SendOrderConfirmation(ctx context.Context, order *
 		}()
 	} else {
 		go func() {
-			if err := n.sendEmail(identifier, fmt.Sprintf("Order #%d Confirmed – AaryaShop", order.ID), orderConfirmationHTML(order)); err != nil {
+			if err := n.sendEmail(identifier, fmt.Sprintf("Order #%d Confirmed – SBY TWILIGHT", order.ID), orderConfirmationHTML(order)); err != nil {
 				log.Printf("[NotificationService] order confirmation email failed: %v", err)
 			}
 		}()
@@ -110,9 +110,9 @@ func (n *NotificationService) SendOrderConfirmation(ctx context.Context, order *
 // SendOrderStatusUpdate notifies the customer when order status changes.
 func (n *NotificationService) SendOrderStatusUpdate(ctx context.Context, order *model.Order, identifier, status string) {
 	statusMsg := map[string]string{
-		model.OrderStatusShipped:   fmt.Sprintf("Order #%d has been shipped! You'll receive it soon. - AaryaShop", order.ID),
-		model.OrderStatusDelivered: fmt.Sprintf("Order #%d delivered! Thank you for shopping with AaryaShop. 🙏", order.ID),
-		model.OrderStatusCancelled: fmt.Sprintf("Order #%d has been cancelled. Refund (if any) will be processed in 5-7 days. - AaryaShop", order.ID),
+		model.OrderStatusShipped:   fmt.Sprintf("Order #%d has been shipped! You'll receive it soon. - SBY TWILIGHT", order.ID),
+		model.OrderStatusDelivered: fmt.Sprintf("Order #%d delivered! Thank you for shopping with SBY TWILIGHT. 🙏", order.ID),
+		model.OrderStatusCancelled: fmt.Sprintf("Order #%d has been cancelled. Refund (if any) will be processed in 5-7 days. - SBY TWILIGHT", order.ID),
 	}
 	msg, ok := statusMsg[status]
 	if !ok {
@@ -127,7 +127,7 @@ func (n *NotificationService) SendOrderStatusUpdate(ctx context.Context, order *
 		}()
 	} else {
 		go func() {
-			subject := fmt.Sprintf("Order #%d %s – AaryaShop", order.ID, strings.Title(status))
+			subject := fmt.Sprintf("Order #%d %s – SBY TWILIGHT", order.ID, strings.Title(status))
 			if err := n.sendEmail(identifier, subject, orderStatusHTML(order, status)); err != nil {
 				log.Printf("[NotificationService] status email failed: %v", err)
 			}
@@ -139,7 +139,7 @@ func (n *NotificationService) SendOrderStatusUpdate(ctx context.Context, order *
 func (n *NotificationService) SendVendorNewOrder(ctx context.Context, order *model.Order) {
 	if n.vendorPhone != "" {
 		go func() {
-			msg := fmt.Sprintf("New order #%d received! Total: ₹%d. Ship to: %s. - AaryaShop",
+			msg := fmt.Sprintf("New order #%d received! Total: ₹%d. Ship to: %s. - SBY TWILIGHT",
 				order.ID, order.TotalCents/100, order.ShippingName)
 			if err := n.sendSMS(n.vendorPhone, msg); err != nil {
 				log.Printf("[NotificationService] vendor SMS failed: %v", err)
@@ -148,7 +148,7 @@ func (n *NotificationService) SendVendorNewOrder(ctx context.Context, order *mod
 	}
 	if n.vendorEmail != "" {
 		go func() {
-			subject := fmt.Sprintf("New Order #%d – AaryaShop", order.ID)
+			subject := fmt.Sprintf("New Order #%d – SBY TWILIGHT", order.ID)
 			if err := n.sendEmail(n.vendorEmail, subject, vendorAlertHTML(order)); err != nil {
 				log.Printf("[NotificationService] vendor email failed: %v", err)
 			}
