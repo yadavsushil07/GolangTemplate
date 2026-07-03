@@ -8,7 +8,7 @@ import Footer from "./Footer";
 // console, which supplies its own layout.
 export default function Chrome({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  if (path?.startsWith("/admin")) return <>{children}</>;
+  if (path?.startsWith("/admin") || path?.startsWith("/vendor")) return <>{children}</>;
   return (
     <>
       <Navbar />

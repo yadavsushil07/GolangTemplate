@@ -153,6 +153,23 @@ export const listMyOrders = async () =>
   (await request<Order[] | null>("/orders")) ?? [];
 
 // ---- vendor / admin (role required) ----
+
+export interface VendorStats {
+  total_revenue_cents: number;
+  total_orders: number;
+  total_products: number;
+  low_stock_products: number;
+  orders_by_status: Record<string, number>;
+  monthly_revenue: Array<{
+    year: number;
+    month: number;
+    revenue_cents: number;
+    order_count: number;
+  }>;
+}
+
+export const vendorGetStats = () => request<VendorStats>("/vendor/stats");
+
 export const vendorListProducts = async () =>
   (await request<Product[] | null>("/vendor/products")) ?? [];
 export const vendorCreateProduct = (data: {
@@ -180,3 +197,42 @@ export const vendorUpdateOrderStatus = (id: number, status: string) =>
     method: "PUT",
     body: JSON.stringify({ status }),
   });
+
+// ---- vendor categories ----
+export const vendorListCategories = async () =>
+  (await request<Category[] | null>("/vendor/categories")) ?? [];
+export const vendorCreateCategory = (data: { name: string; slug: string; sort_order?: number }) =>
+  request<Category>("/vendor/categories", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+export const vendorDeleteCategory = (id: number) =>
+  request<{ message: string }>(`/vendor/categories/${id}`, { method: "DELETE" });
+
+// ---- vendor coupons ----
+export interface Coupon {
+  id: number;
+  code: string;
+  type: string;
+  value: number;
+  min_order_cents: number;
+  expires_at?: string;
+  is_active: boolean;
+  created_at: string;
+}
+export interface CreateCouponPayload {
+  code: string;
+  type: "flat" | "percent";
+  value: number;
+  min_order_cents?: number;
+  expires_at?: string;
+}
+export const vendorListCoupons = async () =>
+  (await request<Coupon[] | null>("/vendor/coupons")) ?? [];
+export const vendorCreateCoupon = (data: CreateCouponPayload) =>
+  request<Coupon>("/vendor/coupons", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+export const vendorDeactivateCoupon = (id: number) =>
+  request<{ message: string }>(`/vendor/coupons/${id}`, { method: "DELETE" });

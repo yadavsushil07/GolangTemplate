@@ -206,6 +206,75 @@ func (h *VendorHandler) SetProductCategories(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, map[string]string{"message": "categories updated"})
 }
 
+// ---- Stats ----
+
+type MonthlyRevenue struct {
+	Year         int `json:"year"`
+	Month        int `json:"month"`
+	RevenueCents int `json:"revenue_cents"`
+	OrderCount   int `json:"order_count"`
+}
+
+type VendorStats struct {
+	TotalRevenueCents int                `json:"total_revenue_cents"`
+	TotalOrders       int                `json:"total_orders"`
+	OrdersByStatus    map[string]int     `json:"orders_by_status"`
+	MonthlyRevenue    []MonthlyRevenue   `json:"monthly_revenue"`
+	TotalProducts     int                `json:"total_products"`
+	LowStockProducts  int                `json:"low_stock_products"`
+}
+
+func (h *VendorHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	orders, err := h.orderSvc.ListAll(ctx)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch orders")
+		return
+	}
+
+	products, err := h.productSvc.List(ctx, false, "")
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch products")
+		return
+	}
+
+	stats := VendorStats{
+		OrdersByStatus: make(map[string]int),
+		TotalProducts:  len(products),
+	}
+
+	monthlyMap := make(map[string]*MonthlyRevenue)
+
+	for _, o := range orders {
+		stats.TotalOrders++
+		stats.TotalRevenueCents += o.TotalCents
+		stats.OrdersByStatus[o.Status]++
+
+		key := o.CreatedAt.Format("2006-01")
+		if _, ok := monthlyMap[key]; !ok {
+			monthlyMap[key] = &MonthlyRevenue{
+				Year:  o.CreatedAt.Year(),
+				Month: int(o.CreatedAt.Month()),
+			}
+		}
+		monthlyMap[key].RevenueCents += o.TotalCents
+		monthlyMap[key].OrderCount++
+	}
+
+	for _, v := range monthlyMap {
+		stats.MonthlyRevenue = append(stats.MonthlyRevenue, *v)
+	}
+
+	for _, p := range products {
+		if p.Stock <= 5 {
+			stats.LowStockProducts++
+		}
+	}
+
+	writeJSON(w, http.StatusOK, stats)
+}
+
 // ---- Orders ----
 
 func (h *VendorHandler) ListAllOrders(w http.ResponseWriter, r *http.Request) {

@@ -79,6 +79,9 @@ func New(
 			r.Use(middleware.Auth(authSvc))
 			r.Use(middleware.VendorOrAdmin)
 
+			// Stats
+			r.Get("/vendor/stats", vendorH.GetStats)
+
 			// Products
 			r.Get("/vendor/products", vendorH.ListAllProducts)
 			r.Post("/vendor/products", vendorH.CreateProduct)
