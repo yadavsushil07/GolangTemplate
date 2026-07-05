@@ -51,6 +51,11 @@ func (s *ProductService) Create(ctx context.Context, req model.CreateProductRequ
 	if req.PriceCents <= 0 {
 		return nil, fmt.Errorf("price must be greater than zero")
 	}
+	for i, v := range req.Variants {
+		if v.PriceCents <= 0 {
+			return nil, fmt.Errorf("variant %d: price must be greater than zero", i+1)
+		}
+	}
 	return s.repo.Create(ctx, req)
 }
 
@@ -87,8 +92,8 @@ func (s *ProductService) AddImages(ctx context.Context, productID int64, urls []
 	return s.variantRepo.AddImages(ctx, productID, urls)
 }
 
-func (s *ProductService) DeleteImage(ctx context.Context, imageID int64) error {
-	return s.variantRepo.DeleteImage(ctx, imageID)
+func (s *ProductService) DeleteImage(ctx context.Context, productID, imageID int64) error {
+	return s.variantRepo.DeleteImage(ctx, productID, imageID)
 }
 
 func (s *ProductService) SetCategories(ctx context.Context, productID int64, categoryIDs []int64) error {

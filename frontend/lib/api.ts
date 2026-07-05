@@ -212,12 +212,25 @@ export const vendorCreateProduct = (data: {
   price_cents: number;
   image_url?: string;
   stock: number;
+  category_ids?: number[];
+  attribute_value_ids?: number[];
+  variants?: Array<{ size: string; color: string; price_cents: number; stock: number; sku: string }>;
 }) =>
   request<Product>("/vendor/products", {
     method: "POST",
     body: JSON.stringify(data),
   });
-export const vendorUpdateProduct = (id: number, data: Record<string, unknown>) =>
+export interface UpdateProductPayload {
+  name?: string;
+  description?: string;
+  price_cents?: number;
+  image_url?: string;
+  stock?: number;
+  is_active?: boolean;
+  category_ids?: number[];
+  attribute_value_ids?: number[];
+}
+export const vendorUpdateProduct = (id: number, data: UpdateProductPayload) =>
   request<Product>(`/vendor/products/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -231,6 +244,22 @@ export const vendorUpdateOrderStatus = (id: number, status: string) =>
     method: "PUT",
     body: JSON.stringify({ status }),
   });
+
+// ---- vendor attributes ----
+export interface AttributeValue {
+  id: number;
+  attribute_id: number;
+  value: string;
+  sort_order: number;
+}
+export interface Attribute {
+  id: number;
+  name: string;
+  sort_order: number;
+  values: AttributeValue[];
+}
+export const vendorListAttributes = async () =>
+  (await request<Attribute[] | null>("/vendor/attributes")) ?? [];
 
 // ---- vendor categories ----
 export const vendorListCategories = async () =>
@@ -270,3 +299,53 @@ export const vendorCreateCoupon = (data: CreateCouponPayload) =>
   });
 export const vendorDeactivateCoupon = (id: number) =>
   request<{ message: string }>(`/vendor/coupons/${id}`, { method: "DELETE" });
+
+// ---- vendor product images ----
+export const vendorAddImages = (productId: number, urls: string[]) =>
+  request<{ message: string }>(`/vendor/products/${productId}/images`, {
+    method: "POST",
+    body: JSON.stringify({ urls }),
+  });
+
+export const vendorDeleteImage = (productId: number, imageId: number) =>
+  request<{ message: string }>(
+    `/vendor/products/${productId}/images/${imageId}`,
+    { method: "DELETE" }
+  );
+
+// ---- cloudinary direct upload ----
+export async function uploadToCloudinary(
+  file: File,
+  cloudName: string,
+  uploadPreset: string,
+  onProgress?: (pct: number) => void
+): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+      "POST",
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`
+    );
+
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      });
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = JSON.parse(xhr.responseText);
+        resolve(data.secure_url as string);
+      } else {
+        reject(new Error(`Cloudinary upload failed: ${xhr.statusText}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(formData);
+  });
+}

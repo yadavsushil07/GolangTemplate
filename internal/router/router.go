@@ -58,6 +58,9 @@ func New(
 		// Categories — public
 		r.Get("/categories", categoryH.List)
 
+		// Attributes — public (storefront product filters)
+		r.Get("/attributes", vendorH.ListAttributes)
+
 		// Coupon validation — public
 		r.Post("/coupons/validate", orderH.ValidateCoupon)
 
@@ -104,6 +107,9 @@ func New(
 			r.Get("/vendor/categories", vendorH.ListCategories)
 			r.Post("/vendor/categories", vendorH.CreateCategory)
 			r.Delete("/vendor/categories/{id}", vendorH.DeleteCategory)
+
+			// Attributes
+			r.Get("/vendor/attributes", vendorH.ListAttributes)
 
 			// Orders
 			r.Get("/vendor/orders", vendorH.ListAllOrders)

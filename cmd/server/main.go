@@ -43,6 +43,7 @@ func main() {
 	productRepo := repository.NewProductRepository(db)
 	variantRepo := repository.NewVariantRepository(db)
 	catRepo := repository.NewCategoryRepository(db)
+	attrRepo := repository.NewAttributeRepository(db)
 	cartRepo := repository.NewCartRepository(db)
 	orderRepo := repository.NewOrderRepository(db)
 	couponRepo := repository.NewCouponRepository(db)
@@ -85,7 +86,7 @@ func main() {
 	categoryH := handler.NewCategoryHandler(catRepo)
 	cartH := handler.NewCartHandler(cartSvc)
 	orderH := handler.NewOrderHandler(orderSvc, couponSvc, paymentSvc)
-	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo)
+	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo, attrRepo)
 	adminH := handler.NewAdminHandler(userRepo, orderRepo, orderSvc)
 
 	r := router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, adminH, cfg.RateLimitPerMinute, cfg.AllowedOrigins)

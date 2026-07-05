@@ -135,7 +135,7 @@ func TestProductRepository(t *testing.T) {
 		assert.Len(t, imgs, 2)
 		assert.Equal(t, "https://a.com/1.jpg", imgs[0].URL)
 
-		err = variantRepo.DeleteImage(ctx, imgs[0].ID)
+		err = variantRepo.DeleteImage(ctx, p.ID, imgs[0].ID)
 		require.NoError(t, err)
 		imgs2, _ := variantRepo.GetImages(ctx, p.ID)
 		assert.Len(t, imgs2, 1)

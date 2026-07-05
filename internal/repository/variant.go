@@ -110,7 +110,14 @@ func (r *VariantRepository) GetImages(ctx context.Context, productID int64) ([]m
 	return imgs, rows.Err()
 }
 
-func (r *VariantRepository) DeleteImage(ctx context.Context, imageID int64) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM product_images WHERE id = $1`, imageID)
-	return err
+func (r *VariantRepository) DeleteImage(ctx context.Context, productID, imageID int64) error {
+	result, err := r.db.Exec(ctx,
+		`DELETE FROM product_images WHERE id = $1 AND product_id = $2`, imageID, productID)
+	if err != nil {
+		return err
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("image not found for this product")
+	}
+	return nil
 }

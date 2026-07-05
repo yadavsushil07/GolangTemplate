@@ -23,6 +23,13 @@ export interface ProductImage {
   sort_order: number;
 }
 
+export interface AttributeValue {
+  id: number;
+  attribute_id: number;
+  value: string;
+  sort_order: number;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -37,6 +44,7 @@ export interface Product {
   variants?: ProductVariant[];
   images?: ProductImage[];
   categories?: Category[];
+  attribute_values?: AttributeValue[];
 }
 
 export interface CartItem {

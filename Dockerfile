@@ -1,26 +1,13 @@
-# --- Build stage ---
-FROM golang:1.26-alpine AS builder
+# Uses a pre-built Linux binary from bin/server-linux.
+# Build it locally with:
+#   GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o bin/server-linux ./cmd/server
+# Then rebuild the image:
+#   docker compose up -d --build server
+FROM scratch
 
-WORKDIR /app
-
-# Cache dependencies separately
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source and build
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server/main.go
-
-# --- Runtime stage ---
-FROM alpine:3.20
-
-RUN apk add --no-cache ca-certificates tzdata
-
-WORKDIR /app
-
-COPY --from=builder /app/server ./server
-COPY --from=builder /app/migrations ./migrations
+COPY bin/server-linux /server
+COPY migrations /migrations
 
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["/server"]

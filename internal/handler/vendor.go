@@ -16,10 +16,11 @@ type VendorHandler struct {
 	orderSvc   *service.OrderService
 	couponSvc  *service.CouponService
 	catRepo    *repository.CategoryRepository
+	attrRepo   *repository.AttributeRepository
 }
 
-func NewVendorHandler(productSvc *service.ProductService, orderSvc *service.OrderService, couponSvc *service.CouponService, catRepo *repository.CategoryRepository) *VendorHandler {
-	return &VendorHandler{productSvc: productSvc, orderSvc: orderSvc, couponSvc: couponSvc, catRepo: catRepo}
+func NewVendorHandler(productSvc *service.ProductService, orderSvc *service.OrderService, couponSvc *service.CouponService, catRepo *repository.CategoryRepository, attrRepo *repository.AttributeRepository) *VendorHandler {
+	return &VendorHandler{productSvc: productSvc, orderSvc: orderSvc, couponSvc: couponSvc, catRepo: catRepo, attrRepo: attrRepo}
 }
 
 // ---- Products ----
@@ -136,12 +137,21 @@ func (h *VendorHandler) AddImages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VendorHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
+	productID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid product id")
+		return
+	}
 	imageID, err := strconv.ParseInt(chi.URLParam(r, "imageId"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid image id")
 		return
 	}
-	if err := h.productSvc.DeleteImage(r.Context(), imageID); err != nil {
+	if err := h.productSvc.DeleteImage(r.Context(), productID, imageID); err != nil {
+		if err.Error() == "image not found for this product" {
+			writeError(w, http.StatusNotFound, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to delete image")
 		return
 	}
@@ -180,10 +190,25 @@ func (h *VendorHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.catRepo.Delete(r.Context(), id); err != nil {
+		if err == repository.ErrCategoryHasProducts {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to delete category")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "category deleted"})
+}
+
+// ---- Attributes ----
+
+func (h *VendorHandler) ListAttributes(w http.ResponseWriter, r *http.Request) {
+	attrs, err := h.attrRepo.ListAttributes(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch attributes")
+		return
+	}
+	writeJSON(w, http.StatusOK, attrs)
 }
 
 func (h *VendorHandler) SetProductCategories(w http.ResponseWriter, r *http.Request) {

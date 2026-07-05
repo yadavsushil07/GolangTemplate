@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/yadavsushil07/GolangTemplate/internal/model"
 )
@@ -46,8 +47,27 @@ func (r *CategoryRepository) Create(ctx context.Context, req model.CreateCategor
 	return c, err
 }
 
+// ErrCategoryHasProducts is returned when deleting a category that still has products assigned.
+var ErrCategoryHasProducts = errors.New("category has products assigned; reassign or remove them first")
+
 func (r *CategoryRepository) Delete(ctx context.Context, id int64) error {
+	var count int
+	if err := r.db.QueryRow(ctx,
+		`SELECT COUNT(*) FROM product_categories WHERE category_id = $1`, id,
+	).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return ErrCategoryHasProducts
+	}
 	_, err := r.db.Exec(ctx, `DELETE FROM categories WHERE id = $1`, id)
+	if err != nil {
+		// Handle FK violation from RESTRICT constraint (TOCTOU race)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return ErrCategoryHasProducts
+		}
+	}
 	return err
 }
 
@@ -63,20 +83,24 @@ func (r *CategoryRepository) FindBySlug(ctx context.Context, slug string) (*mode
 }
 
 func (r *CategoryRepository) SetProductCategories(ctx context.Context, productID int64, categoryIDs []int64) error {
-	_, err := r.db.Exec(ctx,
-		`DELETE FROM product_categories WHERE product_id = $1`, productID)
+	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx,
+		`DELETE FROM product_categories WHERE product_id = $1`, productID); err != nil {
+		return err
+	}
 	for _, cid := range categoryIDs {
-		_, err = r.db.Exec(ctx,
+		if _, err := tx.Exec(ctx,
 			`INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)
-			 ON CONFLICT DO NOTHING`, productID, cid)
-		if err != nil {
+			 ON CONFLICT DO NOTHING`, productID, cid); err != nil {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit(ctx)
 }
 
 func (r *CategoryRepository) GetForProduct(ctx context.Context, productID int64) ([]model.Category, error) {

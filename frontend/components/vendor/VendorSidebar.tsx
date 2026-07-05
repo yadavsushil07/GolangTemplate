@@ -98,10 +98,7 @@ export default function VendorSidebar({ open, onClose }: Props) {
             onClick={onClose}
             className="font-display text-xl tracking-[0.25em] uppercase"
           >
-            AARY<span className="text-champ italic">A</span>
-            <span className="text-[10px] tracking-[0.15em] ml-2 text-[#d8c6a4] font-body align-middle">
-              VENDOR
-            </span>
+            Sby<span className="text-champ italic">Twilight</span>
           </Link>
         </div>
 

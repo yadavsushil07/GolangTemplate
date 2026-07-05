@@ -27,6 +27,7 @@ func buildRouter(t *testing.T, tdb *testutil.TestDB) http.Handler {
 	productRepo := repository.NewProductRepository(tdb.Pool)
 	variantRepo := repository.NewVariantRepository(tdb.Pool)
 	catRepo := repository.NewCategoryRepository(tdb.Pool)
+	attrRepo := repository.NewAttributeRepository(tdb.Pool)
 	cartRepo := repository.NewCartRepository(tdb.Pool)
 	orderRepo := repository.NewOrderRepository(tdb.Pool)
 	couponRepo := repository.NewCouponRepository(tdb.Pool)
@@ -42,7 +43,7 @@ func buildRouter(t *testing.T, tdb *testutil.TestDB) http.Handler {
 	categoryH := handler.NewCategoryHandler(catRepo)
 	cartH := handler.NewCartHandler(cartSvc)
 	orderH := handler.NewOrderHandler(orderSvc, couponSvc, nil)
-	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo)
+	vendorH := handler.NewVendorHandler(productSvc, orderSvc, couponSvc, catRepo, attrRepo)
 	adminH := handler.NewAdminHandler(userRepo, orderRepo, orderSvc)
 
 	return router.New(authSvc, authH, productH, categoryH, cartH, orderH, vendorH, adminH, 100, []string{"*"})

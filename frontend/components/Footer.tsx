@@ -34,9 +34,9 @@ export default function Footer() {
         <FooterCol
           heading="Shop"
           links={[
-            ["Suit Sets", "/shop?category=suit-sets"],
-            ["Anarkali", "/shop?category=anarkali"],
-            ["Gharara", "/shop?category=gharara"],
+            ["Farshi Sets", "/shop?category=farshi-sets"],
+            // ["Anarkali", "/shop?category=anarkali"],
+            // ["Gharara", "/shop?category=gharara"],
             ["Co-ord Sets", "/shop?category=co-ord-sets"],
           ]}
         />
